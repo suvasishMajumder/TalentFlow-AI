@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model complaints {
+  id             Int       @id @default(autoincrement())
+  user_id        Int?
+  complaint_type String?
+  description    String?
+  status         String?
+  created_at     DateTime? @default(now()) @db.Timestamp(6)
+  updated_at     DateTime? @default(now()) @db.Timestamp(6)
+  users          users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model department {
+  id                                 Int       @id @default(autoincrement())
+  dep_name                           String    @unique @db.VarChar(50)
+  dep_description                    String?
+  manager_id                         Int?
+  email                              String?   @db.VarChar(60)
+  status                             Boolean?  @default(true)
+  location                           String?
+  created_at                         DateTime? @default(now()) @db.Timestamp(6)
+  updated_at                         DateTime? @default(now()) @db.Timestamp(6)
+  users_department_manager_idTousers users?    @relation("department_manager_idTousers", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_users_dept_idTodepartment    users[]   @relation("users_dept_idTodepartment")
+}
+
+model job_information {
+  id      Int   @id @default(autoincrement())
+  info    Json  @db.Json
+  user_id Int
+  users   users @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model leave_requests {
+  id         Int       @id @default(autoincrement())
+  user_id    Int?
+  start_date DateTime? @db.Date
+  end_date   DateTime? @db.Date
+  reason     String?
+  status     Boolean?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @db.Timestamp(6)
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model notice {
+  id                Int       @id @default(autoincrement())
+  title             String    @db.VarChar(100)
+  description       String?   @db.VarChar(200)
+  priority_level    String
+  target_department String?
+  created_at        DateTime? @default(now()) @db.Timestamp(6)
+  updated_at        DateTime? @default(now()) @db.Timestamp(6)
+  viewcount         Int?      @default(0)
+}
+
+model profiles {
+  id           Int      @id @default(autoincrement())
+  user_id      Int      @unique
+  education    String?
+  hard_skill   String?
+  degree       String?
+  soft_skill   String?
+  address      String?
+  city         String?  @db.VarChar(40)
+  nationality  String?  @db.VarChar(40)
+  gender       String?  @db.VarChar(10)
+  status       Boolean? @default(true)
+  mobile1      String?  @db.VarChar(30)
+  mobile2      String?  @db.VarChar(30)
+  type_of_hire String?
+  job_role     String?  @db.VarChar(30)
+  postal_code  String?  @db.VarChar(20)
+  users        users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model reg_letters {
+  id               Int       @id @default(autoincrement())
+  user_id          Int?
+  last_working_day DateTime? @db.Date
+  notice_period    String?   @db.VarChar(60)
+  reason           String?
+  status           Boolean?
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+  users            users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model salary_structures {
+  id             Int       @id @default(autoincrement())
+  user_id        Int
+  effective_from DateTime  @default(now()) @db.Timestamptz(6)
+  effective_to   DateTime? @db.Timestamptz(6)
+  is_current     Boolean   @default(true)
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+  created_by     Int?
+  users          users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_salary_structures_user")
+
+  @@index([is_current], map: "idx_salary_structures_is_current")
+  @@index([user_id], map: "idx_salary_structures_user_id")
+}
+
+model tasks {
+  id          Int          @id @default(autoincrement())
+  title       String       @db.VarChar(30)
+  description String       @db.VarChar(200)
+  status      task_status? @default(assigned)
+  created_on  DateTime?    @default(now()) @db.Timestamp(6)
+  deadline    DateTime     @db.Date
+  user_id     Int?
+  users       users?       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model users {
+  id                                      Int                 @id @default(autoincrement())
+  email                                   String              @unique @db.VarChar(254)
+  password                                String
+  role                                    String?             @default("user") @db.VarChar(30)
+  created_on                              DateTime?           @default(now()) @db.Timestamptz(6)
+  dept_id                                 Int?
+  name                                    String?             @db.VarChar(255)
+  employeeid                              String?             @db.VarChar(100)
+  phnumbers                               String[]
+  employeestatusenum                      String              @default("ACTIVE") @db.VarChar(20)
+  complaints                              complaints[]
+  department_department_manager_idTousers department[]        @relation("department_manager_idTousers")
+  job_information                         job_information[]
+  leave_requests                          leave_requests[]
+  profiles                                profiles?
+  reg_letters                             reg_letters[]
+  salary_structures                       salary_structures[]
+  tasks                                   tasks[]
+  department_users_dept_idTodepartment    department?         @relation("users_dept_idTodepartment", fields: [dept_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum employeestatusenum {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  TERMINATED
+}
+
+enum payment_method {
+  BANK_TRANSFER
+  CHEQUE
+  CASH
+  OTHER
+}
+
+enum task_status {
+  assigned
+  doing
+  under_review
+  done
+}

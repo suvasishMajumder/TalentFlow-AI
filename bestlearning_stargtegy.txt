@@ -1,0 +1,14 @@
+1) Try before help — implement from scratch and run tests locally.
+
+2) Write one failing test that reproduces the bug (Supertest/Jest or a curl script). Tests make the problem concrete and reproducible.
+
+Ask for hints, not full paste — request: a) likely root causes given the failing test/error, b) a 3–line pseudo-fix or targeted diff,
+ or c) a single failing assertion to add. Only ask for full code if you’ve tried all hints.
+
+3) Study the suggested fix deeply — annotate line-by-line, explain aloud, and imagine edge cases.
+
+4) Rewrite from memory (exactly as you already planned).
+
+5) Refactor or extend — add a feature, tighten security, or write an extra test.
+
+6) Commit with clear messages and add a one-paragraph CHANGELOG / REASON for the fix.

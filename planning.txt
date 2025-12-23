@@ -1,0 +1,185 @@
+
+
+/********* Examples **********/
+GET    /api/users          # List all users
+GET    /api/users/:id      # Get specific user
+POST   /api/users          # Create new user
+PUT    /api/users/:id      # Update entire user
+PATCH  /api/users/:id      # Partial user update
+DELETE /api/users/:id      # Delete user
+
+
+
+
+
+
+GET /tasks/admin/getallemployees              #List all the employees of the company
+
+GET /tasks/admin/getEmployeeDeartmentWise     #List all the employees of the company per department 
+
+GET /tasks/admin/getalltasks                  #List all the tasks of all employees of the company
+
+GET /tasks/admin/gettaskbydepartment          #List all the tasks department wise
+
+GET /tasks/admin/?status=
+assigned&department=
+Marketing&assignee=5&sort=
+deadline&order=asc&page=1&limit=10            # List all tasks with multiple filtering and sorting options available
+
+GET /tasks/admin/getalldepartments            # List all departments
+
+GET /tasks/admin/stats                        # List all stats
+
+GET /tasks/admin/getallcomplaints             # List all complaints done by all employees
+
+GET /tasks/admin/getallleaverequests          # List all the leave requests done by all the employees
+
+POST /tasks/admin/createtask                  # Create a partiuclar task 
+
+PATCH /tasks/admin/updatestatus               # Update the status
+
+DELETE /tasks/admin/deletetask/:id            # Delete a particular task
+
+POST /tasks/admin/postnotices                 # Post a notice
+
+POST /tasks/admin/postwarningletter           # Post a warning letter
+
+POST /tasks/admin/postterminationletter       # Post a termination letter
+
+POST /tasks/admin/createallsuspenseletters    # Create suspense letter for an employee
+
+GET /tasks/admin/getallterminationletter      # List all termination letter
+
+GET /tasks/admin/getallwarningletters         # List all warning letters
+
+GET /tasks/admin/getallsuspensionletter       # List all the suspension letters
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*/**************************************************** New  structure ****************************************/
+// EMPLOYEES
+GET /api/admin/employees                      # All employees (with ?department= filter)   --complete
+GET /api/admin/employees/:id                  # Specific employee                          --complete
+POST /api/admin/employees                     # Create employee                            --complete
+PUT /api/admin/employees/:id                  # Update employee                            --complete
+DELETE /api/admin/employees/:id               # Delete employee
+
+// TASKS  
+GET /api/admin/tasks                          # All tasks (with all your filters)        --complete
+GET /api/admin/tasks/:id                      # Specific task                            --complete
+POST /api/admin/tasks                         # Create task                              --complete
+PUT /api/admin/tasks/:id                      # Update task                              --complete
+PATCH /api/admin/tasks/:id/status             # Update status only                       --complete
+DELETE /api/admin/tasks/:id                   # Delete task                              --complete
+
+// DEPARTMENTS
+GET /api/admin/departments                    # All departments                          --complete
+POST /api/admin/departments                   # Create department                        --complete
+PUT /api/admin/departments/:id                # Update department                        --complete
+DELETE /api/admin/departments/:id             # Delete department                        --complete
+
+// COMPLAINTS
+GET /api/admin/complaints                     # All complaints (with filters)            --complete
+GET /api/admin/complaints/:id                 # Specific complaint                       --complete
+PATCH /api/admin/complaints/:id/status        # Update complaint status                  --complete
+
+// LEAVE REQUESTS --complete
+GET /api/admin/leave-requests                 # All leave requests                       --complete
+GET /api/admin/leave-requests/:id             # Specific leave request                   --complete
+PATCH /api/admin/leave-requests/:id/status    # Update status                            --complete
+
+// NOTICES --complete
+GET /api/admin/notices                        # All notices                              --complete
+POST /api/admin/notices                       # Create notice                            --complete
+PUT /api/admin/notices/:id                    # Update notice                            --complete
+DELETE /api/admin/notices                     # Delete all notices                       --complete
+DELETE /api/admin/notices/:id                 # Delete notice                            --complete
+
+// STATISTICS & REPORTING
+GET /api/admin/dashboard/stats                # Dashboard statistics
+GET /api/admin/reports/tasks                  # Task reports
+GET /api/admin/reports/attendance             # Attendance reports
+GET /api/admin/reports/performance            # Performance reports
+
+
+
+
+/****************************** Project Understanding Prompt *******************/
+
+
+
+Project Overview
+I am building a Task Manager and HR Management System using the PERN stack (PostgreSQL, Express.js, React, Node.js). 
+The backend is being developed with Node.js, Express, and Prisma ORM for PostgreSQL.
+
+Key Features
+User Management: CRUD operations for users (employees), authentication, and role-based access.
+Task Management: Employees can create, update, view, and delete their own tasks. Admins can manage all tasks, assign tasks, filter, sort, and view tasks department-wise.
+Department Management: CRUD operations for departments, assign managers, and associate users with departments.
+Complaints & Leave Requests: Employees can submit complaints and leave requests. Admins can view and update statuses.
+Notices: Admins can post, update, and delete notices for employees.
+Payroll & Salary Structure: Models for salary structures, payroll records, and components, supporting earnings, deductions, and payment status tracking.
+Statistics & Reporting: Endpoints for dashboard statistics, task reports, attendance, and performance.
+Tech Stack
+Backend: Node.js, Express.js
+Database: PostgreSQL
+ORM: Prisma
+Authentication: JWT (assumed from context)
+API Design: RESTful, with clear separation for admin and employee endpoints
+Database Schema (Prisma)
+users: Employees with roles, department association, and authentication fields.
+tasks: Tasks assigned to users, with status, deadlines, and relations.
+department: Departments with managers and employees.
+complaints, leave_requests, notice, reg_letters: HR-related models for complaints, leave, notices, resignation letters.
+profile: Extended user profile with education, skills, contact info.
+salary_structures, salary_components, payroll_records, payroll_components: Payroll and salary breakdown.
+Enums: For task status, component type (earning/deduction), payment status, and payment method.
+API Endpoints
+Users (Employees)
+GET /api/users — List all users
+GET /api/users/:id — Get specific user
+POST /api/users — Create new user
+PUT /api/users/:id — Update user
+PATCH /api/users/:id — Partial update
+DELETE /api/users/:id — Delete user
+Admin Endpoints
+Employees: CRUD, filter by department
+Tasks: CRUD, filter/sort by status, department, assignee, deadline, etc.
+Departments: CRUD
+Complaints: View all, update status
+Leave Requests: View all, update status
+Notices: CRUD, delete all or by ID
+Statistics & Reports: Dashboard stats, task/attendance/performance reports
+Example Complex Endpoints
+GET /api/admin/tasks?status=assigned&department=Marketing&assignee=5&sort=deadline&order=asc&page=1&limit=10 — List tasks with multiple filters and sorting.
+PATCH /api/admin/tasks/:id/status — Update only the status of a task.
+Middleware & Validation
+Authentication middleware attaches req.user to requests.
+Input validation for required fields and enums.
+Error handling for Prisma errors (unique constraint, foreign key, etc.).
+Current Issues
+Prisma relation errors (e.g., missing opposite relation fields).
+Prisma client generation (npx prisma generate required after schema changes).
+Model naming conventions (Prisma models are singular, table names can be plural).
+Goal:
+To build a robust, scalable HR and Task Management backend with clear RESTful APIs, proper data modeling, and admin/employee separation, supporting all typical HR operations for a company.
+
+Instructions for AI Tool:
+
+Use the provided schema and endpoint planning as the source of truth.
+Suggest improvements, generate code, or help debug based on this structure.
+Ensure all Prisma models and relations are correct and compatible.
+Follow best practices for REST API design, error handling, and validation.
+If you need more details (e.g., specific model fields, sample requests/responses, or authentication flow), please ask!
+
+GPT-4.1 • 1x

@@ -1,0 +1,12 @@
+The tasks table's status field uses a single enum type called task_status with the following 4 enumeration values:
+
+assigned
+doing
+under_review
+done
+
+This enum restricts the status column to only accept these predefined values,
+ ensuring data consistency for task status tracking in the application.
+
+
+
