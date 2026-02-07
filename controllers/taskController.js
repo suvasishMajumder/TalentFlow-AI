@@ -2,8 +2,16 @@ import prisma from "../utils/prismaClient.js";
 import pool from "../db.js";
 import * as z from "zod";
 
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import bcrypt from "bcrypt";
+import {
+  badReq,
+  created,
+  noContent,
+  notFound,
+  ok,
+  serverfail,
+  unauthorized,
+} from "../utils/utils.js";
 
 // const prisma = new PrismaClient();
 
@@ -22,36 +30,18 @@ export const getAllEmployees = async (req, res) => {
     // console.log(req.user);
 
     if (!userId) {
-      return res.status(401).json({
-        success: false,
-        data: null,
-        error: { message: "Unauthorized" },
-      });
+      return unauthorized(res);
     }
 
     const response = await prisma.users.findMany({});
 
-    console.log(response);
-
     if (response.length === 0) {
-      return res.status(404).json({
-        success: false,
-        data: null,
-        error: { message: "No Employees Found" },
-      });
+      return notFound(res, "No employees found");
     }
 
-    return res.status(200).json({
-      success: true,
-      data: response,
-      error: null,
-    });
+    return ok(res, response);
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      data: null,
-      error: error.message || "Internal Server error",
-    });
+    return serverfail(res, error?.message);
   }
 };
 
@@ -62,19 +52,11 @@ export const getOneSingleEmployee = async (req, res) => {
     const userId = req.user.id;
 
     if (!userId) {
-      return res.status(401).json({
-        success: false,
-        data: null,
-        error: { message: "Unauthorized" },
-      });
+      return unauthorized(res);
     }
 
     if (!empId) {
-      return res.status(400).json({
-        success: false,
-        data: null,
-        error: { message: "Employee id parameter Missing" },
-      });
+      return badReq(res, "employee id is missing");
     }
 
     const response = await prisma.users.findUnique({
@@ -83,27 +65,15 @@ export const getOneSingleEmployee = async (req, res) => {
       },
     });
 
-    console.log(response);
+    // console.log(response);
 
     if (!response) {
-      return res.status(404).json({
-        success: false,
-        data: null,
-        error: { message: "No Employees Found" },
-      });
+      return notFound(res, "No employee found with this id");
     }
 
-    return res.status(200).json({
-      success: true,
-      data: response,
-      error: null,
-    });
+    return ok(res, response);
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      data: null,
-      error: error.message || "Internal Server error",
-    });
+    return serverfail(res, error?.message);
   }
 };
 
@@ -124,11 +94,7 @@ export const createEmployee = async (req, res) => {
     const hashedpassword = bcrypt.hashSync(password, salt);
 
     if (!userId) {
-      return res.status(401).json({
-        success: false,
-        data: null,
-        error: { message: "Unauthorized" },
-      });
+      return unauthorized(res, response);
     }
 
     if (
@@ -140,124 +106,83 @@ export const createEmployee = async (req, res) => {
       !employeeid ||
       !phnumbers
     ) {
-      return res.status(400).json({
-        success: false,
-        data: null,
-        error: {
-          message:
-            "id , email , password, dept_id , name , employeeid , phnumbers must not be empty",
-        },
-      });
+      return badReq(
+        res,
+        "id , email , password, dept_id , name , employeeid , phnumbers must not be empty",
+      );
     }
 
-    const data = {};
-
-    data.password = hashedpassword;
-    data.email = email;
-    data.role = role || "user";
-    data.dept_id = parseInt(dept_id);
-    data.name = name;
-    data.employeeid = employeeid;
+    const data = {
+      password: hashedpassword,
+      email,
+      role: role || "user",
+      dept_id: parseInt(dept_id),
+      name,
+      employeeid,
+    };
 
     if (typeof phnumbers === "string") {
-      const phonenumbers = phnumbers.replace(/[{}]/g, "").split(",");
-
-      data.phnumbers = phonenumbers;
+      data.phnumbers = phnumbers.replace(/[{}]/g, "").split(",");
     } else if (Array.isArray(phnumbers)) {
       data.phnumbers = phnumbers;
     }
 
-    const response = await prisma.users.create({
-      data: data,
-    });
+    const response = await prisma.users.create({ data });
 
-
-
-    return res.status(201).json({ success: true, data: response, error: null });
+    return created(res, response);
   } catch (error) {
-
-    if (error instanceof prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        return res.status(400).json({
-          success: false,
-          data: null,
-          error: { message: "Duplicate Record" },
-        });
-      }
+    if (error.code === "P2002") {
+      // Unique constraint violation
+      return res.status(400).json({
+        success: false,
+        data: null,
+        error: { message: "Duplicate Record" },
+      });
     }
 
-    return res.status(500).json({
-      success: false,
-      data: null,
-      error: { message: error.message || "Internal Server Error" },
-    });
+    return serverfail(res, error?.message);
   }
 };
 
 export const updateEmployeeInfo = async (req, res) => {
-
   const empId = Number(req.params.id);
 
   const userId = req.user.id;
 
-  console.log(req.body)
-
+  // console.log(req.body);
 
   try {
+    const isRecordExists = await prisma.users.findUnique({
+      where: { id: empId },
+    });
 
+    if (!isRecordExists) {
+      return notFound(res, "the record does not exist");
+    }
 
-const isRecordExists = await prisma.users.findUnique({where:{id:empId}})
-
-if(!isRecordExists){
-
-  return res.status(404).json({success:false,data:null,error:{message:"Record does not exist"}})
-
-}
-
-  const {
-  
-    password,
-    role ,
-    dept_id,
-    name,
-    employeeid,
-    employeestatusenum,
-    phnumbers,
-  } = req.body;
-
+    const {
+      password,
+      role,
+      dept_id,
+      name,
+      employeeid,
+      employeestatusenum,
+      phnumbers,
+    } = req.body;
 
     if (!userId) {
-      return res.status(401).json({
-        success: false,
-        data: null,
-        error: { message: "Unauthorized" },
-      });
+      return unauthorized(res);
     }
 
     if (!empId) {
-      return res.status(400).json({
-        success: false,
-        data: null,
-        error: { message: "Employee Id is missing" },
-      });
+      return badReq(res, "Employee id is missing");
     }
 
-    if (
-      !password ||
-      !role ||
-      !dept_id ||
-      !name ||
-      !employeeid ||
-      !phnumbers
-    ) {
-      res.status(400).json({
-        success: false,
-        data: null,
-        error: {
-          message:
-            "password, role , dept_id , name , employee_id , phnumbers must not be null",
-        },
-      });
+    if (!password || !role || !dept_id || !name || !employeeid || !phnumbers) {
+      return badReq(
+        res,
+        "id , email , password, dept_id , name , employeeid , phnumbers must not be empty",
+      );
     }
 
     const data = {};
@@ -266,7 +191,7 @@ if(!isRecordExists){
     data.dept_id = Number(dept_id);
     data.name = name;
     data.employeeid = employeeid;
-    data.employeestatusenum = { set: employeestatusenum }; 
+    data.employeestatusenum = { set: employeestatusenum };
     data.phnumbers = phnumbers;
 
     const response = await prisma.users.update({
@@ -275,20 +200,15 @@ if(!isRecordExists){
       },
       data: data,
     });
-console.log(response)
-
+    // console.log(response);
 
     if (!response) {
       throw new Error("Updation Failed");
     }
 
-    return res.status(200).json({ success: true, data: response, error: null });
+    return ok(res, response);
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      data: null,
-      error: { message: error.message || "Internal Server Error" },
-    });
+    return serverfail(res, error?.message);
   }
 };
 
@@ -297,26 +217,19 @@ export const deleteEmployee = async (req, res) => {
   const userId = req.user.id;
 
   if (!userId) {
-    return res
-      .status(401)
-      .json({ success: false, data: null, error: { message: "Unauthorized" } });
+    return unauthorized(res);
   }
 
-  
-const isRecordExists = await prisma.users.findUnique({where:{id:empId}})
+  const isRecordExists = await prisma.users.findUnique({
+    where: { id: empId },
+  });
 
-if(!isRecordExists){
-
-  return res.status(404).json({success:false,data:null,error:{message:"Record does not exist"}})
-
-}
+  if (!isRecordExists) {
+    return notFound(res, "record does not exist");
+  }
 
   if (!empId) {
-    return res.status(400).json({
-      success: false,
-      data: null,
-      error: { message: "Employee Id not present" },
-    });
+    return badReq(res, "Employee id is missing");
   }
 
   try {
@@ -326,31 +239,21 @@ if(!isRecordExists){
       },
     });
 
-    return res.status(204).json({
-      success: true,
-      data: response,
-      error: { message: "Deletion Successful" },
-    });
+    return noContent(res);
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      data: null,
-      error: { message: error.message || "Internal Server Error" },
-    });
+    return serverfail(res, error?.message);
   }
 };
 
 export const getAllTodos = async (req, res) => {
   try {
-    const userId = req.user.id;
+    // const userId = req.user.id;
     // console.log(req.user);
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        data: null,
-        error: { message: "Unauthorized" },
-      });
+    const user_id = Number(req.params.empid);
+    console.log(user_id);
+    if (!user_id) {
+      return badReq(res, "Employee's user id is missing");
     }
 
     const result = await prisma.tasks.findMany({
@@ -365,39 +268,33 @@ export const getAllTodos = async (req, res) => {
       },
 
       where: {
-        user_id: userId,
+        user_id: user_id,
       },
     });
 
     if (!result || result.length === 0) {
-      return res.status(200).json({
-        success: false,
-        data: null,
-        error: { message: "No Tasks Found" },
-      });
+      return notFound(res, "No tasks found");
     }
 
     // console.log(result);
 
-    return res.status(200).json({ success: true, data: result, error: null });
+    return ok(res, result);
   } catch (err) {
     console.error(err);
-    return res.status(500).json({
-      success: false,
-      data: null,
-      error: err.message || "Internal Server error",
-    });
+    return serverfail(res, err?.message);
   }
 };
 
 export const getSingleTodo = async (req, res) => {
   const id = Number(req.params.id);
-  const user_id = req.user.id;
+  const user_id = Number(req.params.empid);
+
+  if (!id) {
+    return badReq(res, "Task id is missing");
+  }
 
   if (!user_id) {
-    return res
-      .status(401)
-      .json({ success: false, data: null, error: { message: "Unauthorized" } });
+    return badReq(res, "Employee user_id is missing");
   }
 
   try {
@@ -409,24 +306,16 @@ export const getSingleTodo = async (req, res) => {
     });
 
     if (response === null) {
-      return res.status(404).json({
-        success: false,
-        data: null,
-        error: { message: `Not task found with this task id ${id}` },
-      });
+      return notFound(res, `Not task found with this task id ${id}`);
     }
 
-    return res.status(200).json({ success: true, data: response, error: null });
+    return ok(res, response);
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      data: null,
-      error: { message: error.message || "Internal Server Error" },
-    });
+    return serverfail(res, error?.message);
   }
 };
 
+/************************ +++++++++++++++++++++++++ UPTO THIS  *************************************************/
 export const createTodo = async (req, res) => {
   // Grab the currently logged-in user's ID from the request.
   // This assumes you have some authentication middleware attaching `req.user`.
@@ -438,34 +327,25 @@ export const createTodo = async (req, res) => {
   // ---- Step 1: Authentication check ----
   // If there's no user, block the request.
   if (!user_id) {
-    return res
-      .status(401)
-      .json({ success: false, data: null, error: { message: "Unauthorized" } });
+    return unauthorized(res);
   }
 
   // ---- Step 2: Input validation ----
   // Ensure required fields are provided.
   if (!title || !description || !status || !deadline) {
-    return res.status(400).json({
-      success: false,
-      data: null,
-      error: {
-        message: "title, description, status, and deadline must not be blank",
-      },
-    });
+    return badReq(
+      res,
+      "title, description, status, and deadline must not be blank",
+    );
   }
 
   const validStatuses = ["assigned", "doing", "under_review", "done"];
 
   if (!validStatuses.includes(status)) {
-    return res.status(400).json({
-      success: false,
-      data: null,
-      error: {
-        message:
-          "Invalid Task Status (It must be any of these:assigned , doing , under_review , done ",
-      },
-    });
+    return badReq(
+      res,
+      "Invalid Task Status (It must be any of these:assigned , doing , under_review , done ",
+    );
   }
 
   // ---- Step 3: Convert deadline into a Date object ----
@@ -487,9 +367,10 @@ export const createTodo = async (req, res) => {
   */
 
   if (Number.isNaN(deadLineTime.getTime())) {
-    return res
-      .status(400)
-      .json({ success: false, data: null, error: { message: "Invalid Date" } });
+    return badReq(
+      res,
+      "Invalid Task Status (It must be any of these:assigned , doing , under_review , done ",
+    );
   }
 
   try {
@@ -524,32 +405,30 @@ export const createTodo = async (req, res) => {
     const newdata = await prisma.tasks.findMany({ where: { user_id } });
 
     // Send the created task back with status 201 (Created)
-    return res.status(201).json({ success: true, data: newdata, error: null });
+    return created(res, newdata);
   } catch (error) {
     // ---- Step 5: Error handling ----
 
     // Prisma uses specific error codes for DB-level issues
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        // Error code P2002 means "Unique constraint failed".
-        // This happens if the same user tries to create a task with the
-        // same title+description+status again (duplicate).
-        return res.status(409).json({
-          success: false,
-          data: null,
-          error: { message: "Duplicate entry" },
-        });
-      }
-      if (error.code === "P2003") {
-        // Error code P2003 means "Foreign key constraint failed".
-        // This could happen if `user_id` does not exist in the users table.
-        // Shouldn’t normally happen if auth middleware is correct.
-        return res.status(400).json({
-          success: false,
-          data: null,
-          error: { message: "Invalid user reference" },
-        });
-      }
+    if (error.code === "P2002") {
+      // Error code P2002 means "Unique constraint failed".
+      // This happens if the same user tries to create a task with the
+      // same title+description+status again (duplicate).
+      return res.status(409).json({
+        success: false,
+        data: null,
+        error: { message: "Duplicate entry" },
+      });
+    }
+    if (error.code === "P2003") {
+      // Error code P2003 means "Foreign key constraint failed".
+      // This could happen if `user_id` does not exist in the users table.
+      // Shouldn’t normally happen if auth middleware is correct.
+      return res.status(400).json({
+        success: false,
+        data: null,
+        error: { message: "Invalid user reference" },
+      });
     }
 
     // For all other unexpected errors, return generic 500
@@ -564,14 +443,13 @@ export const createTodo = async (req, res) => {
 export const updateTodo = async (req, res) => {
   const id = Number(req.params.id);
 
-  const user_id = req.user?.id;
+  // const user_id = req.user?.id;
+  // console.log(user_id)
 
   const { title, description, status, deadline } = req.body;
 
-  if (!user_id) {
-    return res
-      .status(401)
-      .json({ success: false, data: null, error: { message: "Unauthorized" } });
+  if (!id) {
+    return badReq(res, "Task id is missing");
   }
 
   if (!title && !description && !status && !deadline) {
@@ -596,19 +474,10 @@ export const updateTodo = async (req, res) => {
     });
   }
 
-  if (existing.user_id !== user_id) {
-    return res.status(401).json({
-      success: false,
-      data: null,
-      error: { message: "Unauthorized for updating this task" },
-    });
-  }
-
   try {
     const response = await prisma.tasks.update({
       where: {
         id: id,
-        user_id: user_id,
       },
       data: {
         title: title,
@@ -618,38 +487,19 @@ export const updateTodo = async (req, res) => {
       },
     });
 
-    const result = await prisma.tasks.findMany({
-      orderBy: {
-        id: "asc",
-      },
-      where: {
-        user_id,
-      },
-    });
-
-    if (result.length === 0) {
-      throw new Error("No Data Found");
-    } else {
-      res.status(200).json({ success: true, data: result, error: null });
-    }
+    return ok(res, response);
   } catch (error) {
     console.log(error);
 
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return res.status(400).json({
-          success: false,
-          data: null,
-          error: { message: "Bad Request !" },
-        });
-      }
+    // Prisma uses specific error codes for DB-level issues
+    if (error.code === "P2025") {
+      // Error code P2025 means "Record not found".
+      // This happens if the update query fails because the record doesn't exist
+      // or doesn't match the given conditions (id + user_id).
+      return badReq(res, "Bad Request");
     }
 
-    res.status(500).json({
-      success: false,
-      data: null,
-      error: { message: error.message || "Internal Server Error" },
-    });
+    return serverfail(res, error?.message);
   }
 };
 
@@ -759,6 +609,7 @@ export const getSingleNotice = async (req, res) => {
       return res.status(204).json({ error: "No Noitce Found with this id" });
     }
 
+    console.log(result);
     if (result.length !== 0) {
       return res.status(200).json(result);
     } else {
@@ -810,11 +661,6 @@ export const getRequests = async (req, res) => {
 
 export const updateNoticeViewCount = async (req, res) => {
   const notice_id = Number(req?.params.id);
-  const userId = req?.user.id;
-
-  if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
 
   if (!notice_id || isNaN(notice_id)) {
     return res.staus(400).json({ error: "Invalid Notice Id" });
@@ -839,9 +685,7 @@ export const updateNoticeViewCount = async (req, res) => {
 
     return res.status(201).json(updatedNotices.rows);
   } catch (error) {
-    return res
-      .status(500)
-      .json({ error: error.message || "Internal Server Error" });
+    return serverfail(res, error?.message);
   }
 };
 
@@ -886,7 +730,7 @@ export const createProfile = async (req, res) => {
     job_role: z.string().min(1, "Job role fields must be specified"),
     postal_code: z.string.min(
       4,
-      "Postal_code field must be specified and it should be at least 4 digits"
+      "Postal_code field must be specified and it should be at least 4 digits",
     ),
   });
 
@@ -928,16 +772,17 @@ export const deleteSingleNotice = async (req, res) => {
       },
     });
 
-    const newResponse = await prisma.notice.findMany({});
+    // const newResponse = await prisma.notice.findMany({});
 
-    return res.status(200).json(newResponse);
+    return noContent(res);
   } catch (error) {
-    if (error instanceof prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return res
-          .status(404)
-          .json({ error: "Notice with this id is not found" });
-      }
+    // Prisma uses specific error codes for DB-level issues
+    if (error.code === "P2025") {
+      // Error code P2025 means "Record not found".
+      // This happens if the delete query fails because the record doesn't exist.
+      return res
+        .status(404)
+        .json({ error: "Notice with this id is not found" });
     } else {
       return res
         .status(500)
@@ -961,12 +806,13 @@ export const deleteAllNotice = async (req, res) => {
       .status(200)
       .json({ message: "All Notices Deleted Successfully" });
   } catch (error) {
-    if (error instanceof prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return res
-          .status(404)
-          .json({ error: "Notice with this id is not found" });
-      }
+    // Prisma uses specific error codes for DB-level issues
+    if (error.code === "P2025") {
+      // Error code P2025 means "Record not found".
+      // This happens if the delete query fails because the record doesn't exist.
+      return res
+        .status(404)
+        .json({ error: "Notice with this id is not found" });
     } else {
       return res
         .status(500)
@@ -1104,14 +950,14 @@ export const getSingleComplaint = async (req, res) => {
       .json({ success: true, data: complaint, error: null });
   } catch (error) {
     // --- Step 6: Prisma-specific errors ---
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return res.status(404).json({
-          success: false,
-          data: null,
-          error: { message: "Complaint with this ID not found" },
-        });
-      }
+    if (error.code === "P2025") {
+      // Error code P2025 means "Record not found".
+      // This happens if the query fails because the record doesn't exist.
+      return res.status(404).json({
+        success: false,
+        data: null,
+        error: { message: "Complaint with this ID not found" },
+      });
     }
 
     // --- Step 7: Generic server error ---
@@ -1406,7 +1252,7 @@ export const deleteDepartment = async (req, res) => {
     });
   }
 
-  const idDepartmentExists = doesDepartmentExists(deptId);
+  const idDepartmentExists = doesDepartmentExists(id);
 
   if (!idDepartmentExists) {
     return res.status(404).json({
@@ -1423,14 +1269,15 @@ export const deleteDepartment = async (req, res) => {
 
     res.status(204).json({ success: false, data: response, error: null });
   } catch (error) {
-    if (error instanceof PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return res.status(404).json({
-          success: false,
-          data: null,
-          error: { message: `deparment with the ${id} not foound` },
-        });
-      }
+    // Prisma uses specific error codes for DB-level issues
+    if (error.code === "P2025") {
+      // Error code P2025 means "Record not found".
+      // This happens if the delete query fails because the record doesn't exist.
+      return res.status(404).json({
+        success: false,
+        data: null,
+        error: { message: `deparment with the ${id} not foound` },
+      });
     }
   }
 };

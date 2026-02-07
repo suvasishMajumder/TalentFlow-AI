@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -122,25 +121,57 @@ model tasks {
 }
 
 model users {
-  id                                      Int                 @id @default(autoincrement())
-  email                                   String              @unique @db.VarChar(254)
-  password                                String
-  role                                    String?             @default("user") @db.VarChar(30)
-  created_on                              DateTime?           @default(now()) @db.Timestamptz(6)
-  dept_id                                 Int?
-  name                                    String?             @db.VarChar(255)
-  employeeid                              String?             @db.VarChar(100)
-  phnumbers                               String[]
-  employeestatusenum                      String              @default("ACTIVE") @db.VarChar(20)
-  complaints                              complaints[]
-  department_department_manager_idTousers department[]        @relation("department_manager_idTousers")
-  job_information                         job_information[]
-  leave_requests                          leave_requests[]
-  profiles                                profiles?
-  reg_letters                             reg_letters[]
-  salary_structures                       salary_structures[]
-  tasks                                   tasks[]
-  department_users_dept_idTodepartment    department?         @relation("users_dept_idTodepartment", fields: [dept_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                                                  Int                 @id @default(autoincrement())
+  email                                               String              @unique @db.VarChar(254)
+  password                                            String
+  role                                                String?             @default("user") @db.VarChar(30)
+  created_on                                          DateTime?           @default(now()) @db.Timestamptz(6)
+  dept_id                                             Int?
+  name                                                String?             @db.VarChar(255)
+  employeeid                                          String?             @db.VarChar(100)
+  phnumbers                                           String[]
+  employeestatusenum                                  String              @default("ACTIVE") @db.VarChar(20)
+  complaints                                          complaints[]
+  department_department_manager_idTousers             department[]        @relation("department_manager_idTousers")
+  job_information                                     job_information[]
+  leave_requests                                      leave_requests[]
+  profiles                                            profiles?
+  reg_letters                                         reg_letters[]
+  salary_structures                                   salary_structures[]
+  support_tickets_support_tickets_assignee_idTousers  support_tickets[]   @relation("support_tickets_assignee_idTousers")
+  support_tickets_support_tickets_requester_idTousers support_tickets[]   @relation("support_tickets_requester_idTousers")
+  tasks                                               tasks[]
+  department_users_dept_idTodepartment                department?         @relation("users_dept_idTodepartment", fields: [dept_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model recruitment_applicants {
+  id                Int                @id @default(autoincrement())
+  applicant_name    String             @db.VarChar(255)
+  stage             recruitment_stage?
+  job_role          job_role_type?
+  resume_link       String?
+  email_id          String?            @unique @db.VarChar(255)
+  mobile_number     String?            @db.VarChar(20)
+  interview_date    DateTime?          @db.Date
+  interview_time    interview_slot? 
+  meet_link         String?
+  mail_reply_status String?
+  created_at        DateTime?          @default(now()) @db.Timestamp(6)
+}
+
+model support_tickets {
+  id                                        Int             @id @default(autoincrement())
+  title                                     String
+  description                               String
+  status                                    ticket_status   @default(OPEN)
+  priority                                  ticket_priority @default(MEDIUM)
+  requester_id                              Int
+  assignee_id                               Int?
+  created_at                                DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime?       @default(now()) @db.Timestamptz(6)
+  resolution_notes                          String?
+  users_support_tickets_assignee_idTousers  users?          @relation("support_tickets_assignee_idTousers", fields: [assignee_id], references: [id], onUpdate: NoAction, map: "fk_assignee")
+  users_support_tickets_requester_idTousers users           @relation("support_tickets_requester_idTousers", fields: [requester_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_requester")
 }
 
 enum employeestatusenum {
@@ -162,4 +193,56 @@ enum task_status {
   doing
   under_review
   done
+}
+
+enum interview_slot {
+  SLOT_3_00_400 @map("3:00-400")
+  SLOT_4_00_500 @map("4:00-5:00")
+  SLOT_5_00_600 @map("5:00-6:00")
+}
+
+enum job_role_type {
+  FE_Developer          @map("FE Developer")
+  BE_developer          @map("BE developer")
+  FS_developer__MERN_   @map("FS developer (MERN)")
+  FS_developer_JAVA_    @map("FS developer(JAVA)")
+  FS_Developer__Python_ @map("FS Developer (Python)")
+  AI_LLM_engineer       @map("AI-LLM engineer")
+  UI_UX_Designer        @map("UI/UX Designer")
+  Graphic_Designer      @map("Graphic Designer")
+  Digital_Marketing     @map("Digital Marketing")
+  DevOps
+  Automation_Tester     @map("Automation Tester")
+  Mobile_Developer      @map("Mobile Developer")
+  HR
+  BDE
+  Operation_Executive   @map("Operation Executive")
+  IT_Support            @map("IT Support")
+  Data_Analyst          @map("Data Analyst")
+  Video_Editor          @map("Video Editor")
+  Special_Hire          @map("Special Hire")
+}
+
+enum recruitment_stage {
+  interviewing
+  hired
+  not_interested  @map("not interested")
+  not_selected    @map("not selected")
+  call_not_picked @map("call not picked")
+  intern_offer    @map("intern offer")
+  rejected_offer  @map("rejected offer")
+}
+
+enum ticket_priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ticket_status {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
 }

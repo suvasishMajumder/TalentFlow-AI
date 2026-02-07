@@ -1,6 +1,9 @@
 import dotenv from "dotenv";
 dotenv.config();
-
+// 👇 force Prisma to use pooler at runtime if provided
+if (process.env.DATABASE_URL_POOLER) {
+  process.env.DATABASE_URL = process.env.DATABASE_URL_POOLER;
+}
 import express from "express";
 import pkg from "pg";
 import { v4 as uuidv4 } from "uuid";
@@ -10,14 +13,28 @@ import jwt from "jsonwebtoken";
 import pool from "./db.js";
 // import {CreateError} from '../utils/error.js'
 import taskRoutes from "../backend/routes/taskRoutes.js";
+import supportRoutes from '../backend/routes/techSupportRoute.js';
+import hrRoutes from '../backend/routes/hrRoutes.js';
+import employeeRoutes from '../backend/routes/employeeRoutes.js';
 import authRoutes from "../backend/routes/authRoutes.js";
 import { verifyToken } from "./middleware/authMiddleware.js";
 import cookieParser from "cookie-parser";
+import { rateLimiterMiddleware } from "./middleware/ratelimiterMilddleware.js";
 
 const app = express();
 
 const port = process.env.PORT || 4000;
 
+
+
+// ✅ Apply limiter to ALL endpoints
+app.use(rateLimiterMiddleware);
+app.use((req, res, next) => {
+  console.log("Limit info: total limit:", req?.rateLimit.limit);
+  console.log('The ip = ',req.ip)
+   console.log("Limit info: remaining:", req?.rateLimit.remaining);
+  next();
+});
 app.use(express.json()); // Needed for req.body to work
 
 // 2️⃣ (Optional) Parse URL-encoded bodies if you ever post form data
@@ -30,12 +47,18 @@ app.use(
 );
 
 app.use(cookieParser());
+app.set("trust proxy", 1); // ✅ required for correct IP detection
+// Note: xss-clean removed - incompatible with Express 5.x (read-only query property)
 
 app.use("/auth", authRoutes);
 
 // Protected task routes
 // All routes in taskRoutes will require a verified JWT
 app.use("/tasks", verifyToken, taskRoutes);
+app.use("/support",verifyToken,supportRoutes);
+app.use("/hr",verifyToken,hrRoutes);
+app.use("/employees", verifyToken, employeeRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

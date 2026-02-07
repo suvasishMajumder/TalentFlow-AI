@@ -29,145 +29,200 @@ import {
   createEmployee,
 } from "../controllers/taskController.js";
 import { authorizeRole } from "../middleware/roleMiddleware.js";
+import { validationMiddleware } from "../middleware/validationMiddleware.js";
+import {
+  departmentSchema,
+  departmentUpdateSchema,
+  noticeUpdateSchema,
+  taskSchema,
+  taskUpdateSchema,
+  updateComplaintStatusSchema,
+  userSchema,
+  userUpdateSchema,
+} from "../validator/validator.js";
 
 const router = Router();
 
+
+//API tested
 router.get(
   "/api/admin/employees",
   authorizeRole("admin", "manager"),
-  getAllEmployees
+  getAllEmployees,
 );
 
+
+//API tested
 router.get(
   "/api/admin/employees/:id",
   authorizeRole("admin", "manager"),
-  getOneSingleEmployee
+  getOneSingleEmployee,
 );
 
-router.post("/api/admin/employees", authorizeRole("admin"), createEmployee);
 
+//API Tested
+router.post(
+  "/api/admin/employees",
+  authorizeRole("admin"),
+  validationMiddleware(userSchema),
+  createEmployee,
+); //
+
+
+//API Tested
 router.put(
   "/api/admin/employees/:id",
   authorizeRole("admin", "manager"),
-  updateEmployeeInfo
-);
+  validationMiddleware(userUpdateSchema),
+  updateEmployeeInfo,
+); //2
 
+
+//API Tested
 router.delete(
   "/api/admin/employees/:id",
   authorizeRole("admin"),
-  deleteEmployee
+  deleteEmployee,
 );
 
-router.get("/todos", authorizeRole("user", "admin", "manager"), getAllTodos);
+//API Tested
+router.get("/admin/todos/:empid", authorizeRole("hr", "admin", "manager"), getAllTodos);
 
+//API Tested
 router.get(
-  "/todos/:id",
-  authorizeRole("user", "admin", "manager"),
-  getSingleTodo
+  "/admin/todos/:empid/:id",
+  authorizeRole("hr", "admin", "manager"),
+  getSingleTodo,
 );
 
+
+//API Tested
 router.post(
   "/createtask",
-  authorizeRole("user", "admin", "manager"),
-  createTodo
-);
+  authorizeRole("hr", "admin", "manager"),
+  validationMiddleware(taskSchema),
+  createTodo,
+); //3
 
+//Later
 router.delete(
   "/deletetask/:id",
   authorizeRole("user", "admin", "manager"),
-  deleteTodo
+  deleteTodo,
 );
 
-router.put(
+//API tested
+router.patch(
   "/updatetask/:id",
-  authorizeRole("user", "admin", "manager"),
-  updateTodo
-);
+  authorizeRole("admin", "manager"),
+  validationMiddleware(taskUpdateSchema),
+  updateTodo,
+); //4
 
+//API tested
 router.get("/notices", authorizeRole("admin", "manager"), getAllNotices);
 
+
+//API tested
 router.get(
   "/notices/getsinglenotice/:id",
   authorizeRole("admin", "manager"),
-  getSingleNotice
+  getSingleNotice,
 );
 
-router.put(
+//Later
+router.patch(
   "/notices/:id",
   authorizeRole("user", "admin", "manager"),
-  updateNoticeViewCount
-);
+  validationMiddleware(noticeUpdateSchema),
+  updateNoticeViewCount,
+); //5
 
-router.post("/profile", authorizeRole("admin", "manager"), createProfile);
+router.post("/admin/profile", authorizeRole("admin", "manager"), createProfile); //6 -- add validation later later 
 
-router.get("/requests", authorizeRole("admin", "manager"), getRequests);
+router.get("/admin/requests", authorizeRole("admin", "manager"), getRequests); //later 
 
+//API Tested
 router.delete(
   "/admin/notice/deletesinglenotice/:id",
   authorizeRole("admin"),
-  deleteSingleNotice
+  deleteSingleNotice,
 );
 
+//API Tested
 router.delete(
   "/admin/notice/deleteallnotices",
   authorizeRole("admin"),
-  deleteAllNotice
+  deleteAllNotice,
 );
 
+//API Tested
 router.get(
   "/admin/leave_requests",
   authorizeRole("admin"),
-  getAllLeaveRequests
+  getAllLeaveRequests,
 );
 
+//API Tested
 router.get(
   "/admin/leave_requests/:id",
   authorizeRole("admin"),
-  getSingleLeaveRequests
+  getSingleLeaveRequests,
 );
 
+//API Tested
 router.get("/admin/getallcomplaints", authorizeRole("admin"), getAllComplaints);
 
+//API Tested
 router.get(
   "/admin/getsinglecomplaints/:id",
   authorizeRole("admin"),
-  getSingleComplaint
+  getSingleComplaint,
 );
 
+//API Tested
 router.patch(
   "/admin/updateComplaintStatus/:id",
   authorizeRole("admin"),
-  updateComplaintStatus
-);
+  validationMiddleware(updateComplaintStatusSchema),
+  updateComplaintStatus,
+); //7
 
+//API Tested
 router.get(
   "/admin/getAllDepartments",
   authorizeRole("admin"),
-  getAllDepartments
+  getAllDepartments,
 );
 
+//API Tested
 router.get(
   "/admin/getSingleDepartment/:id",
   authorizeRole("admin"),
-  getSingleDepartment
+  getSingleDepartment,
 );
 
+//API Tested
 router.post(
   "/admin/createNewDepartment",
   authorizeRole("admin"),
-  createNewDepartment
-);
+  validationMiddleware(departmentSchema),
+  createNewDepartment,
+); //8
 
+//API Tested
 router.put(
   "/admin/updateDepartment/:id",
   authorizeRole("admin"),
-  updateDepartment
-);
+  validationMiddleware(departmentUpdateSchema),
+  updateDepartment,
+); //9
 
+//API Tested
 router.delete(
   "/admin/deleteasingledepartment/:id",
   authorizeRole("admin"),
-  deleteDepartment
+  deleteDepartment,
 );
 
 export default router;

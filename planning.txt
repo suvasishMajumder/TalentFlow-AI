@@ -111,8 +111,66 @@ GET /api/admin/reports/tasks                  # Task reports
 GET /api/admin/reports/attendance             # Attendance reports
 GET /api/admin/reports/performance            # Performance reports
 
+//HR
+GET    /api/hr                                # All HR records (with filters) --complete
+GET    /api/hr/:id                            # Specific HR record --complete
+POST   /api/hr                                # Create HR record --complete
+PATCH  /api/hr/:id                            # Update HR record --complete
+DELETE /api/hr/:id                            # Delete HR record --complete
 
 
+
+//IT SUPPORT
+GET    /api/support/tickets                   # All IT support tickets --complete
+GET    /api/support/tickets/:id               # Specific ticket --complete
+POST   /api/support/tickets                   # Create new ticket --complete
+PATCH  /api/support/tickets/:id               # Update ticket (status/details) --complete
+DELETE /api/support/tickets/:id               # Delete/close ticket --complete
+
+
+#FOR EMPLOYEE DASHBOARD:
+
+👤 Employee Profile
+GET /api/employees/me → View own profile details. --Complete
+
+PUT /api/employees/me → Update personal info (phone, address, emergency contact). --Complete
+
+GET /api/employees/me/attendance → View own attendance records.
+
+📋 Tasks
+GET /api/employees/me/tasks → View tasks assigned to the employee. -- REDUNDANT
+
+GET /api/employees/me/tasks/:id → View details of a specific task. -- REDUNDANT
+
+PATCH /api/employees/me/tasks/:id/status → Update task status (e.g., “in-progress”, “completed”). -- REDUNDANT
+
+🏢 Departments & Notices
+GET /api/employees/departments → View department list (for reference). ---Complete
+
+GET /api/employees/notices → View all company notices. ---Complete
+
+GET /api/employees/notices/:id → View a specific notice. --Complete
+
+📑 Leave Requests
+GET /api/employees/me/leave-requests → View own leave requests. --Complete
+
+GET /api/employees/me/leave-requests/:id → View status of a specific leave request. --Complete
+
+POST /api/employees/me/leave-requests → Submit a new leave request. --Complete
+
+
+🛠️ Complaints
+GET /api/employees/me/complaints → View complaints submitted by the employee. --Complete
+
+POST /api/employees/me/complaints → Submit a new complaint. --Complete
+
+GET /api/employees/me/complaints/:complainId/:empid → View status of a specific complaint. -- Complete
+
+📊 Dashboard (Employee-Specific)
+GET /api/employees/me/dashboard → Personalized dashboard stats (tasks pending, leave balance, notices).
+
+
+/***************************************************************************************************************/
 
 /****************************** Project Understanding Prompt *******************/
 
@@ -183,3 +241,354 @@ Follow best practices for REST API design, error handling, and validation.
 If you need more details (e.g., specific model fields, sample requests/responses, or authentication flow), please ask!
 
 GPT-4.1 • 1x
+
+
+
+/******************************************** new description **********************************************************/
+
+Below is a clear, step-by-step project description of your PERN Task Manager & HR Management System, written the way it would appear in a real project README / proposal.
+I’ve structured it so it’s easy to understand, scalable, and technically correct.
+
+📌 Project Description
+Task Manager & HR Management System (PERN Stack)
+
+This project is a full-featured Task Management and Human Resource Management System built using the PERN stack (PostgreSQL,
+ Express.js, React, Node.js) with Prisma ORM for database modeling and access.
+
+The system is designed to help organizations manage employees, tasks, departments, payroll, and HR operations efficiently, 
+with clear separation between admin and employee responsibilities.
+
+🏗️ Architecture Overview
+Backend
+
+Node.js + Express.js → REST API
+
+PostgreSQL → Relational database
+
+Prisma ORM → Type-safe database access
+
+JWT Authentication → Secure access control
+
+Role-Based Authorization → Admin vs Employee
+
+Frontend (planned)
+
+React.js → User interface
+
+REST APIs → Backend communication
+
+👥 User Roles
+1. Admin
+
+Full control over users, departments, tasks, payroll, and HR operations
+
+Access to dashboards, statistics, and reports
+
+2. Employee
+
+Manage own tasks
+
+Submit complaints and leave requests
+
+View notices, payroll, and profile details
+
+🔐 Authentication & Authorization
+Authentication
+
+JWT-based login system
+
+Secure password storage
+
+Token-based request authentication
+
+Authorization
+
+Middleware checks user role
+
+Separate routes for:
+
+/api/admin/*
+
+/api/employee/*
+
+📦 Core Features (Step-by-Step)
+1️⃣ User (Employee) Management
+Purpose
+
+Manage employee accounts and access.
+
+Features
+
+Create, update, delete employees
+
+Assign roles (Admin / Employee)
+
+Assign employees to departments
+
+Enable / disable accounts
+
+View employee profiles
+
+API Examples
+GET    /api/users
+GET    /api/users/:id
+POST   /api/users
+PUT    /api/users/:id
+DELETE /api/users/:id
+
+2️⃣ Profile Management
+Purpose
+
+Store extended employee information.
+
+Features
+
+Personal details (address, phone, DOB)
+
+Education & skills
+
+Emergency contact information
+
+Profile updates by employee
+
+Relations
+
+One-to-one with users
+
+3️⃣ Department Management
+Purpose
+
+Organize employees into departments.
+
+Features
+
+Create, update, delete departments
+
+Assign department managers
+
+Associate users with departments
+
+Filter employees by department
+
+Admin APIs
+POST   /api/admin/departments
+GET    /api/admin/departments
+PUT    /api/admin/departments/:id
+DELETE /api/admin/departments/:id
+
+4️⃣ Task Management System
+Purpose
+
+Track and manage employee tasks.
+
+Employee Features
+
+Create tasks
+
+View own tasks
+
+Update task progress
+
+Delete own tasks
+
+Admin Features
+
+Assign tasks to employees
+
+View all tasks
+
+Filter by:
+
+Status
+
+Department
+
+Assignee
+
+Deadline
+
+Sort & paginate tasks
+
+Example API
+GET /api/admin/tasks?status=assigned&department=Marketing&sort=deadline&order=asc&page=1&limit=10
+
+5️⃣ Complaints Management
+Purpose
+
+Allow employees to raise internal issues.
+
+Employee
+
+Submit complaints
+
+View own complaints
+
+Admin
+
+View all complaints
+
+Update complaint status (open / in_review / resolved)
+
+6️⃣ Leave Request Management
+Purpose
+
+Handle employee leave workflows.
+
+Employee
+
+Apply for leave
+
+Track leave status
+
+Admin
+
+Approve / reject leave requests
+
+View leave history
+
+7️⃣ Notices & Announcements
+Purpose
+
+Internal communication within the organization.
+
+Admin
+
+Create notices
+
+Update notices
+
+Delete notices
+
+Publish company announcements
+
+Employee
+
+View active notices
+
+8️⃣ Payroll & Salary Management
+Purpose
+
+Manage employee compensation.
+
+Features
+
+Salary structures
+
+Salary components (earnings & deductions)
+
+Payroll records per employee
+
+Payment status & method tracking
+
+Supported Enums
+
+Component type (EARNING / DEDUCTION)
+
+Payment status (PAID / UNPAID)
+
+Payment method (BANK / CASH)
+
+9️⃣ Reports & Analytics
+Purpose
+
+Provide insights to admins.
+
+Features
+
+Dashboard statistics
+
+Task completion reports
+
+Attendance & performance reports
+
+Department-wise summaries
+
+10️⃣ Validation & Error Handling
+Input Validation
+
+Required fields
+
+Enum validation
+
+ID format validation
+
+Error Handling
+
+Prisma errors (unique constraint, FK constraint)
+
+Centralized error middleware
+
+Meaningful API responses
+
+🧩 Database Design (Prisma ORM)
+Key Models
+
+User
+
+Profile
+
+Department
+
+Task
+
+Complaint
+
+LeaveRequest
+
+Notice
+
+SalaryStructure
+
+SalaryComponent
+
+PayrollRecord
+
+PayrollComponent
+
+Design Principles
+
+Singular Prisma model names
+
+Explicit relations with @relation
+
+Enums for status and type fields
+
+Indexing for performance
+
+🎯 Project Goals
+
+Build a scalable HR & Task Management backend
+
+Follow industry-standard REST API design
+
+Use Prisma best practices for relations and migrations
+
+Maintain clean separation between admin and employee responsibilities
+
+Ensure security, validation, and performance
+
+🚀 Future Enhancements
+
+Role-based dashboards (React)
+
+File uploads (documents, resumes)
+
+Email notifications
+
+Audit logs
+
+Multi-organization support
+
+If you want, next I can:
+
+✅ Design the complete Prisma schema
+
+✅ Generate API folder structure
+
+✅ Write auth middleware
+
+✅ Create Admin vs Employee route separation
+
+✅ Generate ER diagram
+
+✅ Prepare README.md
