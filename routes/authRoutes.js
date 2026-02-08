@@ -1,5 +1,5 @@
 import express, { Router } from "express"
-import { signupUser , loginUser } from "../controllers/authController.js";
+import { signupUser , loginUser, logoutUser } from "../controllers/authController.js";
 import pool from "../db.js";
 
 const router = Router();
@@ -8,6 +8,8 @@ const router = Router();
 router.post('/signup',signupUser);
 
 router.post('/login',loginUser);
+
+router.post('/logout',logoutUser);
 
 // Dev-only debug endpoint: list users (id and email) to confirm which DB is connected.
 router.get('/debug/users', async (req, res) => {

@@ -128,7 +128,7 @@ export const createOneNewLeaveRequest = async (req, res) => {
     return unauthorized(res);
   }
 
-  console.log(userId)
+  console.log(userId);
 
   try {
     const response = await prisma.leave_requests.create({
@@ -188,12 +188,9 @@ export const submitOneNewComplaint = async (req, res) => {
   const payload = req.body;
   const userId = req.user.id;
 
-  
-
   if (!userId) {
-  return unauthorized(res);
+    return unauthorized(res);
   }
-
 
   payload.user_id = userId;
 
@@ -204,17 +201,17 @@ export const submitOneNewComplaint = async (req, res) => {
 
     return created(res, response);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return serverfail(res, error?.message);
   }
 };
 
 export const getSpecificComplaintOfOneEmployee = async (req, res) => {
- const userId = req.user?.id;
+  const userId = req.user?.id;
   const complaintId = Number(req.params.complaintId);
 
   if (!userId) {
-    return unauthorized(res)
+    return unauthorized(res);
   }
 
   if (!complaintId) {
@@ -226,6 +223,51 @@ export const getSpecificComplaintOfOneEmployee = async (req, res) => {
       where: {
         id: complaintId,
         user_id: userId,
+      },
+    });
+
+    return ok(res, response);
+  } catch (error) {
+    return serverfail(res, error?.message);
+  }
+};
+
+export const getAllTasksAsEmployee = async (req, res) => {
+  const userId = req.user?.id;
+  console.log(`The user id on the backend is ${userId}`);
+  if (!userId) {
+    return unauthorized(res);
+  }
+
+  try {
+    const response = await prisma.tasks.findMany({
+      where:{
+        user_id:Number(userId)
+      }
+    });
+
+    return ok(res, response);
+  } catch (error) {
+    return serverfail(res, error?.message);
+  }
+};
+
+export const getSingleTaskAsEmployee = async (req, res) => {
+  const userId = req.user?.id;
+  const taskId = Number(req.params.id);
+
+  if (!userId) {
+    return unauthorized(res);
+  }
+
+  if (!taskId) {
+    return badReq(res, "task id is missing");
+  }
+
+  try {
+    const response = await prisma.tasks.findUnique({
+      where: {
+        id: taskId,
       },
     });
 

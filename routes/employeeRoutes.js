@@ -1,7 +1,7 @@
 import express, { Router } from "express"
 import { signupUser , loginUser } from "../controllers/authController.js";
 import pool from "../db.js";
-import { createOneNewLeaveRequest, getAllComplaintsOfOneEmployee, getAllDepartmentsByEmp, getAllLeaveRequestsOfOneEmployee, getMyData,  getOneSingleLeaveRequestOfOneEmployee, getSpecificComplaintOfOneEmployee, submitOneNewComplaint, updateMyProfile } 
+import { createOneNewLeaveRequest, getAllComplaintsOfOneEmployee, getAllDepartmentsByEmp, getAllLeaveRequestsOfOneEmployee,  getAllTasksAsEmployee, getMyData,  getOneSingleLeaveRequestOfOneEmployee, getSingleTaskAsEmployee, getSpecificComplaintOfOneEmployee, submitOneNewComplaint, updateMyProfile } 
 from "../controllers/employeeControllers.js";
 import { getAllNotices, getOneSingleEmployee, getSingleNotice } from "../controllers/taskController.js";
 import { validationMiddleware } from "../middleware/validationMiddleware.js";
@@ -16,7 +16,9 @@ router.get("/me",  getMyData); //api tested
 
 router.patch("/me",validationMiddleware(userUpdateSchema),updateMyProfile); //api tested
 
-//add get all tasks and get single task routes
+router.get("/getAllTasks",getAllTasksAsEmployee); //API Tested
+
+router.get("/getSingleTask/:id",getSingleTaskAsEmployee); //API Tested
 
 router.get("/departments",getAllDepartmentsByEmp); //api tested
 
